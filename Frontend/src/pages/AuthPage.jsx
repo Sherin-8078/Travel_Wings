@@ -12,19 +12,10 @@ import {
   Tab,
   Box,
 } from "@mui/material";
-import axios from "axios";
+
 import ReCAPTCHA from "react-google-recaptcha";
 
-// ---------------- API ----------------
-const API = axios.create({
-  baseURL: "http://localhost:5000/api/users",
-});
-
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+import axiosInstance from "../axiosInstance";
 
 // ---------------- AuthForm ----------------
 function AuthForm({
@@ -39,25 +30,28 @@ function AuthForm({
   const [captchaToken, setCaptchaToken] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ---------- LOGIN ----------
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!captchaToken) return alert("Please verify the CAPTCHA");
 
     try {
       setLoading(true);
-      const res = await API.post("/login", {
+
+      const res = await axiosInstance.post("/users/login", {
         email: loginForm.email.trim(),
         password: loginForm.password,
         captchaToken,
       });
 
       const { user, token } = res.data;
+
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+
       onLogin(user);
       navigateDashboard(user.role);
     } catch (err) {
-      console.error(err);
       alert(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
@@ -65,25 +59,28 @@ function AuthForm({
     }
   };
 
+  // ---------- SIGNUP ----------
   const handleSignup = async (e) => {
     e.preventDefault();
     if (!captchaToken) return alert("Please verify the CAPTCHA");
 
     try {
       setLoading(true);
-      const res = await API.post("/signup", {
+
+      const res = await axiosInstance.post("/users/signup", {
         ...signupForm,
         email: signupForm.email.trim(),
         captchaToken,
       });
 
       const { user, token } = res.data;
+
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
+
       onLogin(user);
       navigateDashboard(user.role);
     } catch (err) {
-      console.error(err);
       alert(err.response?.data?.message || "Signup failed");
     } finally {
       setLoading(false);
@@ -110,6 +107,7 @@ function AuthForm({
             required
             fullWidth
           />
+
           <TextField
             label="Password"
             type="password"
@@ -120,10 +118,12 @@ function AuthForm({
             required
             fullWidth
           />
+
           <ReCAPTCHA
             sitekey="6LeAg94rAAAAADpDJ7QYTkFA47gTdXBF0B2psl90"
-            onChange={(token) => setCaptchaToken(token)}
+            onChange={setCaptchaToken}
           />
+
           <Button
             type="submit"
             variant="contained"
@@ -152,6 +152,7 @@ function AuthForm({
             required
             fullWidth
           />
+
           <TextField
             label="Email"
             type="email"
@@ -162,6 +163,7 @@ function AuthForm({
             required
             fullWidth
           />
+
           <TextField
             label="Phone"
             value={signupForm.phone}
@@ -171,6 +173,7 @@ function AuthForm({
             required
             fullWidth
           />
+
           <TextField
             label="Password"
             type="password"
@@ -182,7 +185,7 @@ function AuthForm({
             fullWidth
           />
 
-          {/* ---------- Role Selector ---------- */}
+          {/* ---------- Role ---------- */}
           <TextField
             select
             label="Signup as"
@@ -190,7 +193,6 @@ function AuthForm({
             onChange={(e) =>
               setSignupForm({ ...signupForm, role: e.target.value })
             }
-            required
             fullWidth
             SelectProps={{ native: true }}
           >
@@ -199,7 +201,7 @@ function AuthForm({
             <option value="guide">Guide</option>
           </TextField>
 
-          {/* Seller fields */}
+          {/* ---------- Seller Fields ---------- */}
           {signupForm.role === "seller" && (
             <>
               <TextField
@@ -232,7 +234,7 @@ function AuthForm({
             </>
           )}
 
-          {/* Guide fields */}
+          {/* ---------- Guide Fields ---------- */}
           {signupForm.role === "guide" && (
             <>
               <TextField
@@ -244,6 +246,7 @@ function AuthForm({
                 required
                 fullWidth
               />
+
               <TextField
                 label="Experience (years)"
                 type="number"
@@ -254,6 +257,7 @@ function AuthForm({
                 required
                 fullWidth
               />
+
               <TextField
                 label="Location"
                 value={signupForm.location}
@@ -268,8 +272,9 @@ function AuthForm({
 
           <ReCAPTCHA
             sitekey="6LeAg94rAAAAADpDJ7QYTkFA47gTdXBF0B2psl90"
-            onChange={(token) => setCaptchaToken(token)}
+            onChange={setCaptchaToken}
           />
+
           <Button
             type="submit"
             variant="contained"
@@ -285,11 +290,13 @@ function AuthForm({
   );
 }
 
-// ---------------- Main AuthPage ----------------
+// ---------------- Main Page ----------------
 export default function AuthPage({ onLogin }) {
   const navigate = useNavigate();
   const [tab, setTab] = useState(0);
+
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+
   const [signupForm, setSignupForm] = useState({
     name: "",
     email: "",
@@ -316,9 +323,11 @@ export default function AuthPage({ onLogin }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = localStorage.getItem("user");
+
     if (token && user) {
-      onLogin(JSON.parse(user));
-      navigateDashboard(JSON.parse(user).role);
+      const parsed = JSON.parse(user);
+      onLogin(parsed);
+      navigateDashboard(parsed.role);
     }
   }, []);
 
@@ -356,8 +365,6 @@ export default function AuthPage({ onLogin }) {
                 value={tab}
                 onChange={(_, newVal) => setTab(newVal)}
                 variant="fullWidth"
-                textColor="primary"
-                indicatorColor="primary"
               >
                 <Tab label="Login" />
                 <Tab label="Sign Up" />
@@ -365,6 +372,7 @@ export default function AuthPage({ onLogin }) {
             }
             sx={{ pb: 0 }}
           />
+
           <CardContent>
             <AuthForm
               tab={tab}
@@ -379,9 +387,7 @@ export default function AuthPage({ onLogin }) {
         </Card>
 
         <Box textAlign="center" mt={3}>
-          <Button color="inherit" onClick={() => navigate("/")}>
-            ← Back to Home
-          </Button>
+          <Button onClick={() => navigate("/")}>← Back to Home</Button>
         </Box>
       </Box>
     </Box>

@@ -1,7 +1,7 @@
 // SellerDashboard.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import {
   Plus,
   Package,
@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 // --------- BACKEND URL ----------
-const SERVER_URL = "http://localhost:5000";
+const SERVER_URL = "https://travel-wings-2.onrender.com";
 
 // --------- UTILS ----------
 function cn(...classes) {
@@ -65,15 +65,16 @@ const Badge = ({ className, variant = "default", ...props }) => {
   return <span className={cn(base, variantClass, className)} {...props} />;
 };
 
-// Image component with fallback
+// -------- Image Component --------
 const ImageWithFallback = ({ src, alt, className, style, ...rest }) => {
   const [didError, setDidError] = useState(false);
   const ERROR_IMG_SRC = "https://via.placeholder.com/300x200?text=No+Image";
 
-  // Strip any extra path from src and prepend backend path
   const filename = src ? src.replace(/^.*[\\/]/, "") : "";
   const imageSrc =
-    !didError && filename ? `${SERVER_URL}/uploads/packages/${filename}` : ERROR_IMG_SRC;
+    !didError && filename
+      ? `${SERVER_URL}/uploads/packages/${filename}`
+      : ERROR_IMG_SRC;
 
   return (
     <div
@@ -105,9 +106,7 @@ export default function SellerDashboard({ user }) {
   const fetchPackages = async () => {
     if (!user?._id) return;
     try {
-      const { data } = await axios.get(
-        `${SERVER_URL}/api/packages/seller/${user._id}`
-      );
+      const { data } = await axiosInstance.get(`/api/packages/seller/${user._id}`);
       const normalized = data.map((pkg) => ({
         ...pkg,
         status: pkg.status || "pending",
@@ -122,9 +121,7 @@ export default function SellerDashboard({ user }) {
   const fetchBookings = async () => {
     if (!user?._id) return;
     try {
-      const { data } = await axios.get(
-        `${SERVER_URL}/api/bookings/seller/${user._id}`
-      );
+      const { data } = await axiosInstance.get(`/api/bookings/seller/${user._id}`);
       const bookingsArray = data.bookings || data;
       const normalized = bookingsArray.map((b) => ({
         id: b._id,
@@ -147,8 +144,8 @@ export default function SellerDashboard({ user }) {
   const fetchPendingApprovals = async () => {
     if (!user?._id) return;
     try {
-      const bookingPending = await axios.get(
-        `${SERVER_URL}/api/bookings/seller/${user._id}/pending`
+      const bookingPending = await axiosInstance.get(
+        `/api/bookings/seller/${user._id}/pending`
       );
       const pendingBookings = bookingPending.data.bookings.map((b) => ({
         id: b._id,
@@ -167,7 +164,7 @@ export default function SellerDashboard({ user }) {
   const handleApprove = async (id, type) => {
     try {
       if (type === "booking") {
-        await axios.patch(`${SERVER_URL}/api/bookings/approve/${id}`);
+        await axiosInstance.patch(`/api/bookings/approve/${id}`);
         setRecentBookings((prev) =>
           prev.map((b) => (b.id === id ? { ...b, status: "approved" } : b))
         );
@@ -181,7 +178,7 @@ export default function SellerDashboard({ user }) {
   const handleReject = async (id, type) => {
     try {
       if (type === "booking") {
-        await axios.patch(`${SERVER_URL}/api/bookings/reject/${id}`);
+        await axiosInstance.patch(`/api/bookings/reject/${id}`);
         setRecentBookings((prev) =>
           prev.map((b) => (b.id === id ? { ...b, status: "rejected" } : b))
         );
@@ -200,16 +197,19 @@ export default function SellerDashboard({ user }) {
   }, [user]);
 
   // --------- STATS ---------
-const approvedBookings = recentBookings.filter((b) => b.status === "approved");
+  const approvedBookings = recentBookings.filter((b) => b.status === "approved");
 
-const totalRevenue = approvedBookings.reduce((sum, b) => sum + (b.amount || 0), 0);
+  const totalRevenue = approvedBookings.reduce(
+    (sum, b) => sum + (b.amount || 0),
+    0
+  );
 
-const stats = [
-  { title: "Total Packages", value: myPackages.length, icon: Package, color: "text-blue-600" },
-  { title: "Approved Bookings", value: approvedBookings.length, icon: Users, color: "text-green-600" },
-  { title: "Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-purple-600" },
-  { title: "Approved Packages", value: myPackages.filter((p) => p.status === "approved").length, icon: Eye, color: "text-orange-600" },
-];
+  const stats = [
+    { title: "Total Packages", value: myPackages.length, icon: Package, color: "text-blue-600" },
+    { title: "Approved Bookings", value: approvedBookings.length, icon: Users, color: "text-green-600" },
+    { title: "Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: DollarSign, color: "text-purple-600" },
+    { title: "Approved Packages", value: myPackages.filter((p) => p.status === "approved").length, icon: Eye, color: "text-orange-600" },
+  ];
 
   // --------- RENDER ---------
   return (

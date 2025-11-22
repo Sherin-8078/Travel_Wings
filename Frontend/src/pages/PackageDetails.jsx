@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -26,7 +26,7 @@ export default function PackageDetailsPage({ user }) {
   useEffect(() => {
     const fetchPackage = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/packages/${id}`);
+        const res = await axiosInstance.get(`/packages/${id}`); 
         setPkg(res.data);
       } catch (err) {
         console.error("Error fetching package:", err);
@@ -65,9 +65,8 @@ export default function PackageDetailsPage({ user }) {
         totalPrice: pkg.price * guests,
       };
 
-      const res = await axios.post("http://localhost:5000/api/bookings", bookingPayload);
+      const res = await axiosInstance.post(`/bookings`, bookingPayload);
 
-      // ✅ Navigate to confirmation page
       navigate(`/booking-confirmation/${res.data.booking._id}`);
     } catch (err) {
       console.error("Booking error:", err.response?.data || err.message);
@@ -80,6 +79,7 @@ export default function PackageDetailsPage({ user }) {
   return (
     <Box sx={{ minHeight: "100vh", p: 4, backgroundColor: "#f9fafb" }}>
       <Box sx={{ maxWidth: 1200, mx: "auto" }}>
+        
         {/* ---------- Package Image ---------- */}
         <Card sx={{ mb: 4, borderRadius: 3, overflow: "hidden" }}>
           <CardMedia
@@ -132,7 +132,7 @@ export default function PackageDetailsPage({ user }) {
         )}
 
         {/* ---------- Inclusions ---------- */}
-        {pkg.inclusions && pkg.inclusions.length > 0 && (
+        {pkg.inclusions?.length > 0 && (
           <Box mb={4}>
             <Typography variant="h5" mb={1}>
               Inclusions
@@ -150,6 +150,7 @@ export default function PackageDetailsPage({ user }) {
         <Typography variant="h5" mb={2}>
           Booking Details
         </Typography>
+
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mb={4}>
           <TextField
             type="date"
@@ -178,6 +179,7 @@ export default function PackageDetailsPage({ user }) {
           >
             Contact Seller
           </Button>
+
           <Button
             variant="contained"
             color="success"

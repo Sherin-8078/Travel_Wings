@@ -1,7 +1,7 @@
 // BookingConfirmationPage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";
 import { CheckCircle, Download, Calendar, Users, MapPin, Phone, Mail } from "lucide-react";
 
 // ---------- UTILS ----------
@@ -96,7 +96,7 @@ export default function BookingConfirmationPage() {
   useEffect(() => {
     const fetchBooking = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/bookings/${bookingId}`);
+        const res = await axiosInstance.get(`/bookings/${bookingId}`);
         setBooking(res.data);
       } catch (err) {
         console.error(err);
@@ -119,6 +119,7 @@ export default function BookingConfirmationPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-6">
+        
         {/* Success Header */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -131,8 +132,8 @@ export default function BookingConfirmationPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Booking Details */}
           <div className="lg:col-span-2 space-y-6">
+
             {/* Booking Summary */}
             <Card>
               <CardHeader>

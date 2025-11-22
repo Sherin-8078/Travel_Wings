@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import {
   Users,
   Package,
@@ -14,6 +13,8 @@ import {
   MapPin,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+import axiosInstance from "../axiosInstance";
 
 // ---------- UTILS ----------
 function cn(...classes) {
@@ -32,6 +33,7 @@ function Card({ className, ...props }) {
     />
   );
 }
+
 function CardHeader({ className, ...props }) {
   return (
     <div
@@ -40,25 +42,19 @@ function CardHeader({ className, ...props }) {
     />
   );
 }
+
 function CardTitle({ className, ...props }) {
   return (
     <h4 className={cn("leading-none text-lg font-semibold", className)} {...props} />
   );
 }
+
 function CardContent({ className, ...props }) {
-  return (
-    <div className={cn("px-6 [&:last-child]:pb-6", className)} {...props} />
-  );
+  return <div className={cn("px-6 [&:last-child]:pb-6", className)} {...props} />;
 }
 
 // ---------- BUTTON ----------
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  asChild = false,
-  ...props
-}) {
+function Button({ className, variant = "default", size = "default", asChild = false, ...props }) {
   const Comp = asChild ? "span" : "button";
   const base =
     "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-all disabled:pointer-events-none disabled:opacity-50 outline-none";
@@ -73,10 +69,7 @@ function Button({
     lg: "h-10 px-6",
   };
   return (
-    <Comp
-      className={cn(base, variantClasses[variant], sizeClasses[size], className)}
-      {...props}
-    />
+    <Comp className={cn(base, variantClasses[variant], sizeClasses[size], className)} {...props} />
   );
 }
 
@@ -90,24 +83,15 @@ function Badge({ className, variant = "default", ...props }) {
     error: "bg-red-100 text-red-800",
   };
   return (
-    <span
-      className={cn(
-        base,
-        variantClasses[variant] || variantClasses.default,
-        className
-      )}
-      {...props}
-    />
+    <span className={cn(base, variantClasses[variant] || variantClasses.default, className)} {...props} />
   );
 }
 
 // ---------- IMAGE WITH FALLBACK ----------
-const ERROR_IMG_SRC =
-  "https://via.placeholder.com/300x200?text=No+Image";
+const ERROR_IMG_SRC = "https://via.placeholder.com/300x200?text=No+Image";
 
 function ImageWithFallback({ src, alt, className, style, ...props }) {
   const [didError, setDidError] = useState(false);
-  const handleError = () => setDidError(true);
 
   if (didError || !src) {
     return (
@@ -127,7 +111,7 @@ function ImageWithFallback({ src, alt, className, style, ...props }) {
       alt={alt}
       className={cn("object-cover", className)}
       style={style}
-      onError={handleError}
+      onError={() => setDidError(true)}
       {...props}
     />
   );
@@ -141,16 +125,16 @@ export default function AdminDashboard({ user }) {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-  const BASE_URL = "http://localhost:5000";
 
   // --- Fetch Dashboard Data ---
   const fetchAdminData = async () => {
     try {
       const [statsRes, approvalsRes, topRes] = await Promise.all([
-        axios.get(`${BASE_URL}/api/admin/stats`),
-        axios.get(`${BASE_URL}/api/admin/pending-approvals`),
-        axios.get(`${BASE_URL}/api/admin/top-packages`),
+        axiosInstance.get("/admin/stats"),
+        axiosInstance.get("/admin/pending-approvals"),
+        axiosInstance.get("/admin/top-packages"),
       ]);
+
       setStats(statsRes.data);
 
       const approvals = [
@@ -169,16 +153,17 @@ export default function AdminDashboard({ user }) {
           submittedDate: new Date(s.createdAt).toLocaleDateString(),
         })),
       ];
+
       setPendingApprovals(approvals);
 
-      // ✅ Clean filename before appending path
       const formattedTop = topRes.data.map((pkg) => {
         const fileName = pkg.image ? pkg.image.replace(/^.*[\\/]/, "") : null;
         return {
           ...pkg,
-          image: fileName ? `${BASE_URL}/uploads/packages/${fileName}` : null,
+          image: fileName ? `${import.meta.env.VITE_API_BASE_URL.replace("/api", "")}/uploads/packages/${fileName}` : null,
         };
       });
+
       setTopPackages(formattedTop);
     } catch (err) {
       console.error("Error fetching admin data:", err);
@@ -194,7 +179,7 @@ export default function AdminDashboard({ user }) {
   // --- Approve Package ---
   const handleApprove = async (id) => {
     try {
-      await axios.put(`${BASE_URL}/api/admin/approve-package/${id}`);
+      await axiosInstance.put(`/admin/approve-package/${id}`);
       alert("✅ Package approved!");
       fetchAdminData();
     } catch (err) {
@@ -206,7 +191,7 @@ export default function AdminDashboard({ user }) {
   // --- Reject Package ---
   const handleReject = async (id) => {
     try {
-      await axios.put(`${BASE_URL}/api/admin/reject-package/${id}`);
+      await axiosInstance.put(`/admin/reject-package/${id}`);
       alert("🚫 Package rejected!");
       fetchAdminData();
     } catch (err) {
@@ -238,6 +223,7 @@ export default function AdminDashboard({ user }) {
               <p className="text-2xl font-bold">{stats.totalUsers}</p>
             </CardContent>
           </Card>
+
           <Card>
             <CardContent className="p-6">
               <Package className="text-green-600 mb-2" size={32} />
@@ -245,6 +231,7 @@ export default function AdminDashboard({ user }) {
               <p className="text-2xl font-bold">{stats.activePackages}</p>
             </CardContent>
           </Card>
+
           <Card>
             <CardContent className="p-6">
               <DollarSign className="text-purple-600 mb-2" size={32} />
@@ -252,6 +239,7 @@ export default function AdminDashboard({ user }) {
               <p className="text-2xl font-bold">₹{stats.totalRevenue}</p>
             </CardContent>
           </Card>
+
           <Card>
             <CardContent className="p-6">
               <TrendingUp className="text-orange-600 mb-2" size={32} />
@@ -271,18 +259,23 @@ export default function AdminDashboard({ user }) {
               <Button className="h-16 flex flex-col" onClick={() => navigate("/users")}>
                 <UserCheck className="mb-1" size={20} /> Manage Users
               </Button>
+
               <Button className="h-16 flex flex-col">
                 <Package className="mb-1" size={20} /> Review Packages
               </Button>
+
               <Button className="h-16 flex flex-col">
                 <BarChart3 className="mb-1" size={20} /> Analytics
               </Button>
+
               <Button className="h-16 flex flex-col">
                 <FileText className="mb-1" size={20} /> Reports
               </Button>
+
               <Button className="h-16 flex flex-col">
                 <Settings className="mb-1" size={20} /> Settings
               </Button>
+
               <Button className="h-16 flex flex-col">
                 <MapPin className="mb-1" size={20} /> Destinations
               </Button>
@@ -301,22 +294,21 @@ export default function AdminDashboard({ user }) {
             ) : (
               <div className="space-y-4">
                 {pendingApprovals.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between items-center border-b pb-2"
-                  >
+                  <div key={item.id} className="flex justify-between items-center border-b pb-2">
                     <div>
                       <p className="font-medium">{item.title}</p>
                       <p className="text-sm text-gray-500">
                         {item.seller || item.email} • {item.submittedDate}
                       </p>
                     </div>
+
                     <div className="flex gap-2">
                       {item.type === "package" && (
                         <>
                           <Button variant="default" onClick={() => handleApprove(item.id)}>
                             <CheckCircle size={16} /> Approve
                           </Button>
+
                           <Button variant="destructive" onClick={() => handleReject(item.id)}>
                             <XCircle size={16} /> Reject
                           </Button>
@@ -347,12 +339,15 @@ export default function AdminDashboard({ user }) {
                       alt={pkg.title}
                       className="rounded-t-lg w-full h-40"
                     />
+
                     <CardContent>
                       <p className="font-medium">{pkg.title}</p>
                       <p className="text-sm text-gray-500">{pkg.sellerName}</p>
+
                       <p className="text-sm text-gray-600 mt-1">
                         {pkg.bookings} bookings • ₹{pkg.revenue}
                       </p>
+
                       <Badge className="mt-2">{pkg.rating} ★</Badge>
                     </CardContent>
                   </Card>

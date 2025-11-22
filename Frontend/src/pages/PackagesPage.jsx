@@ -1,7 +1,7 @@
 // PackagesPage.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../axiosInstance"; // ✅ use axiosInstance
 import {
   Box,
   Card,
@@ -17,8 +17,6 @@ import {
   Stack,
 } from "@mui/material";
 import { FilterAlt } from "@mui/icons-material";
-
-const SERVER_URL = "http://localhost:5000"; // Backend URL
 
 export default function PackagesPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,7 +36,9 @@ export default function PackagesPage() {
     "Adventure",
     "Wildlife",
   ];
+
   const durations = ["all", "1-2 Days", "3-4 Days", "5-7 Days", "7+ Days"];
+
   const priceRanges = [
     "all",
     "Under ₹10,000",
@@ -49,13 +49,11 @@ export default function PackagesPage() {
 
   // Fetch only approved packages
   useEffect(() => {
-    axios
-      .get(`${SERVER_URL}/api/packages`)
+    axiosInstance
+      .get(`/packages`)
       .then((res) => {
-        const approvedPackages = res.data.filter(
-          (pkg) => pkg.status === "approved"
-        );
-        setPackages(approvedPackages);
+        const approved = res.data.filter((pkg) => pkg.status === "approved");
+        setPackages(approved);
       })
       .catch((err) => console.error("Error fetching packages:", err));
   }, []);
@@ -100,22 +98,25 @@ export default function PackagesPage() {
     navigate(`/package-details/${packageId}`);
   };
 
-  // Image component with fallback
+  // Image With Fallback (uses deployed backend URL automatically)
   const ImageWithFallback = ({ src, alt, sx }) => {
     const [didError, setDidError] = useState(false);
-    const ERROR_IMG_SRC =
-      "https://via.placeholder.com/300x200?text=No+Image";
 
-    const imageSrc =
+    const fallbackImg = "https://via.placeholder.com/300x200?text=No+Image";
+
+    const imageUrl =
       !didError && src
-        ? `${SERVER_URL}/uploads/packages/${src.replace(/^.*[\\/]/, "")}`
-        : ERROR_IMG_SRC;
+        ? `${import.meta.env.VITE_API_BASE_URL.replace(
+            "/api",
+            ""
+          )}/uploads/packages/${src.replace(/^.*[\\/]/, "")}`
+        : fallbackImg;
 
     return (
       <CardMedia
         component="img"
         sx={sx}
-        image={imageSrc}
+        image={imageUrl}
         alt={alt}
         onError={() => setDidError(true)}
       />
@@ -135,7 +136,7 @@ export default function PackagesPage() {
           </Typography>
         </Box>
 
-        {/* Filters */}
+        {/* FILTERS */}
         <Card sx={{ mb: 6 }}>
           <CardContent>
             <Stack direction={{ xs: "column", md: "row" }} spacing={3}>
@@ -148,6 +149,7 @@ export default function PackagesPage() {
                 size="small"
               />
 
+              {/* CATEGORY */}
               <FormControl fullWidth size="small">
                 <InputLabel>Category</InputLabel>
                 <Select
@@ -155,14 +157,15 @@ export default function PackagesPage() {
                   label="Category"
                   onChange={(e) => setSelectedCategory(e.target.value)}
                 >
-                  {categories.map((category) => (
-                    <MenuItem key={category} value={category}>
-                      {category === "all" ? "All Categories" : category}
+                  {categories.map((c) => (
+                    <MenuItem key={c} value={c}>
+                      {c === "all" ? "All Categories" : c}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
 
+              {/* DURATION */}
               <FormControl fullWidth size="small">
                 <InputLabel>Duration</InputLabel>
                 <Select
@@ -170,14 +173,15 @@ export default function PackagesPage() {
                   label="Duration"
                   onChange={(e) => setSelectedDuration(e.target.value)}
                 >
-                  {durations.map((duration) => (
-                    <MenuItem key={duration} value={duration}>
-                      {duration === "all" ? "All Durations" : duration}
+                  {durations.map((d) => (
+                    <MenuItem key={d} value={d}>
+                      {d === "all" ? "All Durations" : d}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
 
+              {/* PRICE RANGE */}
               <FormControl fullWidth size="small">
                 <InputLabel>Price Range</InputLabel>
                 <Select
@@ -185,31 +189,27 @@ export default function PackagesPage() {
                   label="Price Range"
                   onChange={(e) => setPriceRange(e.target.value)}
                 >
-                  {priceRanges.map((range) => (
-                    <MenuItem key={range} value={range}>
-                      {range === "all" ? "All Prices" : range}
+                  {priceRanges.map((r) => (
+                    <MenuItem key={r} value={r}>
+                      {r === "all" ? "All Prices" : r}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
 
-              <Button
-                variant="outlined"
-                fullWidth
-                startIcon={<FilterAlt />}
-                sx={{ height: 40 }}
-              >
+              <Button variant="outlined" fullWidth startIcon={<FilterAlt />}>
                 More Filters
               </Button>
             </Stack>
           </CardContent>
         </Card>
 
-        {/* Packages List */}
+        {/* PACKAGES LIST */}
         <Box>
           <Typography variant="h5" mb={3}>
             All Packages
           </Typography>
+
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {filteredPackages.map((pkg) => (
               <Card
@@ -252,6 +252,7 @@ export default function PackagesPage() {
                       {pkg.duration} • ₹{pkg.price}
                     </Typography>
                   </Box>
+
                   <Stack direction="row" spacing={2}>
                     <Button
                       variant="outlined"

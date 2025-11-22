@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../axiosInstance"; // ✅ USE axiosInstance
 import { Trash2, UserX, UserCheck } from "lucide-react";
 
 export default function ManageUsers() {
@@ -11,7 +11,7 @@ export default function ManageUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/admin/users");
+      const res = await axiosInstance.get("/admin/users"); // ⬅️ updated
       setUsers(res.data);
       setError("");
     } catch (err) {
@@ -29,7 +29,7 @@ export default function ManageUsers() {
   // ✅ Block User
   const handleBlock = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/block-user/${id}`);
+      await axiosInstance.put(`/admin/block-user/${id}`); // ⬅️ updated
       fetchUsers();
     } catch (err) {
       console.error("Error blocking user:", err);
@@ -40,7 +40,7 @@ export default function ManageUsers() {
   // ✅ Unblock User
   const handleUnblock = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/unblock-user/${id}`);
+      await axiosInstance.put(`/admin/unblock-user/${id}`); // ⬅️ updated
       fetchUsers();
     } catch (err) {
       console.error("Error unblocking user:", err);
@@ -51,9 +51,10 @@ export default function ManageUsers() {
   // ✅ Delete User
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
+
     try {
-      await axios.delete(`http://localhost:5000/api/admin/delete-user/${id}`);
-      setUsers(users.filter((u) => u._id !== id)); // Optimistic update
+      await axiosInstance.delete(`/admin/delete-user/${id}`); // ⬅️ updated
+      setUsers((prev) => prev.filter((u) => u._id !== id)); // Optimistic update
     } catch (err) {
       console.error("Error deleting user:", err);
       alert("Failed to delete user");
@@ -84,6 +85,7 @@ export default function ManageUsers() {
               <th className="p-3">Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {users.map((u) => (
               <tr key={u._id} className="border-b hover:bg-gray-50">
@@ -104,6 +106,7 @@ export default function ManageUsers() {
                 <td className="p-3">
                   {new Date(u.createdAt).toLocaleDateString()}
                 </td>
+
                 <td className="p-3 flex gap-2">
                   {u.status === "active" ? (
                     <button
@@ -120,6 +123,7 @@ export default function ManageUsers() {
                       <UserCheck size={16} /> Unblock
                     </button>
                   )}
+
                   <button
                     onClick={() => handleDelete(u._id)}
                     className="px-3 py-1 bg-red-600 text-white rounded-md flex items-center gap-1 hover:bg-red-700"

@@ -1,7 +1,7 @@
 // PackageDetailsWrapper.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../axiosInstance";   // ✅ Use axiosInstance
 import PackageDetails from "./PackageDetails";
 
 export default function PackageDetailsWrapper({ user }) {
@@ -13,7 +13,8 @@ export default function PackageDetailsWrapper({ user }) {
   useEffect(() => {
     const fetchPackage = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/packages/${id}`);
+        // ✅ No localhost — axiosInstance auto-adds backend URL from .env
+        const { data } = await axiosInstance.get(`/packages/${id}`);
         setPkg(data);
       } catch (err) {
         console.error("Failed to fetch package", err);
@@ -21,6 +22,7 @@ export default function PackageDetailsWrapper({ user }) {
         setLoading(false);
       }
     };
+
     fetchPackage();
   }, [id]);
 
