@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -18,6 +18,14 @@ export default function Navbar({ currentUser, onLogout }) {
     navigate("/auth"); // redirect to login page
   };
 
+  // Reusable function for active styling
+  const activeStyle = ({ isActive }) => ({
+    color: isActive ? "#2e7d32" : "inherit",
+    fontWeight: isActive ? "600" : "400",
+    borderBottom: isActive ? "2px solid #2e7d32" : "none",
+    borderRadius: 0,
+  });
+
   return (
     <AppBar
       position="static"
@@ -26,6 +34,7 @@ export default function Navbar({ currentUser, onLogout }) {
       sx={{ borderBottom: 1, borderColor: "divider", px: 3, py: 1 }}
     >
       <Toolbar sx={{ maxWidth: "1200px", width: "100%", mx: "auto" }}>
+        
         {/* Left side: Logo + Nav links */}
         <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", gap: 4 }}>
           <Typography
@@ -39,57 +48,64 @@ export default function Navbar({ currentUser, onLogout }) {
 
           {currentUser ? (
             <Stack direction="row" spacing={3}>
-              {/* Role-based links */}
+              
+              {/* Tourist Links */}
               {currentUser.role === "tourist" && (
                 <>
-                  <Button component={Link} to="/tourist-dashboard" color="inherit">
+                  <Button component={NavLink} to="/tourist-dashboard" style={activeStyle} color="inherit">
                     Home
                   </Button>
-                  <Button component={Link} to="/explore" color="inherit">
+                  <Button component={NavLink} to="/explore" style={activeStyle} color="inherit">
                     Explore
                   </Button>
-                  <Button component={Link} to="/packages" color="inherit">
+                  <Button component={NavLink} to="/packages" style={activeStyle} color="inherit">
                     Packages
                   </Button>
-                  <Button component={Link} to="/bookings" color="inherit">
+                  <Button component={NavLink} to="/bookings" style={activeStyle} color="inherit">
                     My Bookings
                   </Button>
                 </>
               )}
+
+              {/* Seller Links */}
               {currentUser.role === "seller" && (
                 <>
-                  <Button component={Link} to="/seller-dashboard" color="inherit">
+                  <Button component={NavLink} to="/seller-dashboard" style={activeStyle} color="inherit">
                     Dashboard
                   </Button>
-                  <Button component={Link} to="/my-packages" color="inherit">
+                  <Button component={NavLink} to="/my-packages" style={activeStyle} color="inherit">
                     My Packages
                   </Button>
-                  <Button component={Link} to="/add-package" color="inherit">
+                  <Button component={NavLink} to="/add-package" style={activeStyle} color="inherit">
                     Add Package
                   </Button>
-                  <Button component={Link} to="/bookings" color="inherit">
+                  <Button component={NavLink} to="/bookings" style={activeStyle} color="inherit">
                     Bookings
                   </Button>
                 </>
               )}
+
+              {/* Guide Links */}
               {currentUser.role === "guide" && (
                 <>
-                <Button component={Link} to="/seller-dashboard" color="inherit">
-                  Dashboard
-                </Button>
-                <Button component={Link} to="/my-packages" color="inherit">
+                  <Button component={NavLink} to="/seller-dashboard" style={activeStyle} color="inherit">
+                    Dashboard
+                  </Button>
+                  <Button component={NavLink} to="/my-packages" style={activeStyle} color="inherit">
                     My Packages
                   </Button>
-                  <Button component={Link} to="/add-package" color="inherit">
+                  <Button component={NavLink} to="/add-package" style={activeStyle} color="inherit">
                     Add Package
                   </Button>
-                  <Button component={Link} to="/bookings" color="inherit">
+                  <Button component={NavLink} to="/bookings" style={activeStyle} color="inherit">
                     Bookings
                   </Button>
                 </>
               )}
+
+              {/* Admin Link */}
               {currentUser.role === "admin" && (
-                <Button component={Link} to="/admin-dashboard" color="inherit">
+                <Button component={NavLink} to="/admin-dashboard" style={activeStyle} color="inherit">
                   Admin Dashboard
                 </Button>
               )}
@@ -97,16 +113,16 @@ export default function Navbar({ currentUser, onLogout }) {
           ) : (
             <Stack direction="row" spacing={3}>
               {/* Public links */}
-              <Button component={Link} to="/" color="inherit">
+              <Button component={NavLink} to="/" style={activeStyle} color="inherit">
                 Home
               </Button>
-              <Button component={Link} to="/explore" color="inherit">
+              <Button component={NavLink} to="/explore" style={activeStyle} color="inherit">
                 Explore
               </Button>
-              <Button component={Link} to="/packages" color="inherit">
+              <Button component={NavLink} to="/packages" style={activeStyle} color="inherit">
                 Packages
               </Button>
-              <Button component={Link} to="/contact" color="inherit">
+              <Button component={NavLink} to="/contact" style={activeStyle} color="inherit">
                 Contact
               </Button>
             </Stack>
@@ -118,7 +134,7 @@ export default function Navbar({ currentUser, onLogout }) {
           <Stack direction="row" spacing={2} alignItems="center">
             <Typography color="text.primary">Hi, {currentUser.name}</Typography>
             <Button
-              component={Link}
+              component={NavLink}
               to="/profile"
               variant="outlined"
               size="small"
@@ -136,10 +152,10 @@ export default function Navbar({ currentUser, onLogout }) {
           </Stack>
         ) : (
           <Stack direction="row" spacing={2}>
-            <Button component={Link} to="/auth" variant="outlined" color="inherit">
+            <Button component={NavLink} to="/auth" variant="outlined" color="inherit">
               Login
             </Button>
-            <Button component={Link} to="/auth" variant="contained" color="success">
+            <Button component={NavLink} to="/auth" variant="contained" color="success">
               Sign Up
             </Button>
           </Stack>
